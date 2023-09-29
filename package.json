@@ -1,0 +1,44 @@
+{
+  "name": "threejs-merge-geometry-experiment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "run-s dev:build:** && run-p dev:watch:**",
+    "dev:build:js": "webpack",
+    "dev:watch:js": "onchange \"./src/js/**\" -- npm run dev:build:js",
+    "dev:watch:browse": "browser-sync start --server \"public\" --watch",
+    "build": "webpack --mode=production"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.6",
+    "@babel/polyfill": "^7.12.1",
+    "@babel/preset-env": "^7.14.5",
+    "babel-loader": "^8.2.2",
+    "browser-sync": "^2.27.7",
+    "cpx": "^1.5.0",
+    "css-loader": "^4.3.0",
+    "file-loader": "^6.2.0",
+    "hard-source-webpack-plugin": "^0.13.1",
+    "keycode": "^2.2.1",
+    "material-design-icons-iconfont": "^6.6.0",
+    "minify": "^6.0.0",
+    "npm-run-all": "^4.1.5",
+    "onchange": "^7.0.2",
+    "rimraf": "^3.0.2",
+    "sass": "^1.44.0",
+    "sass-loader": "^12.3.0",
+    "sass-resources-loader": "^2.2.4",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "howler": "^2.2.3",
+    "stats-js": "^1.0.1",
+    "three": "^0.157.0"
+  }
+}
