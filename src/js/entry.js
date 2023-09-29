@@ -1,5 +1,10 @@
 import * as THREE from "three";
+import Stats from "stats-js";
 import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+let world, mesh, positionsChunkParam;
+const amount = 3000;
 
 class World {
   constructor({ stageDom }) {
@@ -7,6 +12,11 @@ class World {
     this.scene = null;
     this.camera = null;
     this.renderer = null;
+
+    this.stats = new Stats();
+    this.orbitControls = null;
+
+    this.beforeRenderFunctions = [];
 
     this.#init();
   }
@@ -21,6 +31,9 @@ class World {
       5000
     );
 
+    this.camera.position.set(0, 0, -10);
+    this.camera.lookAt(0, 0, 0);
+
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       logarithmicDepthBuffer: true,
@@ -33,21 +46,107 @@ class World {
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
     this.stageDom.appendChild(this.renderer.domElement);
+
+    document.body.appendChild(this.stats.dom);
+
+    this.orbitControls = new OrbitControls(
+      this.camera,
+      this.renderer.domElement
+    );
   }
 
   update() {
+    this.stats.begin();
+
     requestAnimationFrame(() => {
       this.update();
     });
 
+    this.beforeRenderFunctions.forEach((f) => f());
+
     this.renderer.render(this.scene, this.camera);
+    this.orbitControls.update();
+
+    this.stats.end();
   }
 }
 
+const getInitialPositonVec3List = () => {
+  const result = [];
+  const radius = 3; // 球の半径
+  const phi = Math.PI * (3.0 - Math.sqrt(5.0)); // 黄金角
+
+  for (let i = 0; i < amount; i++) {
+    const y = 1 - (i / (amount - 1)) * 2; // -1から1までの値
+
+    const distance = Math.sqrt(1 - y * y) * radius;
+    const theta = phi * i;
+
+    result.push(
+      new THREE.Vector3(
+        distance * Math.cos(theta),
+        y * radius,
+        distance * Math.sin(theta)
+      )
+    );
+  }
+
+  return result;
+};
+
+const updateGeometry = () => {
+  const positionAttributes = mesh.geometry.attributes.position;
+
+  for (let i = 0; i < amount; i++) {
+    const moveParam = Math.random() * 0.1;
+    const initJ = i * positionsChunkParam;
+    for (let j = initJ; j < initJ + positionsChunkParam; j += 3) {
+      positionAttributes.array[j + 2] -= moveParam;
+    }
+  }
+
+  positionAttributes.needsUpdate = true;
+};
+
+const setupThreeContents = () => {
+  const initialPositionVec3List = getInitialPositonVec3List();
+
+  const geometries = [];
+  for (let i = 0; i < amount; i++) {
+    const geometry = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+
+    const initPos = initialPositionVec3List[i];
+    geometry.translate(initPos.x, initPos.y, initPos.z);
+
+    geometries.push(geometry);
+  }
+
+  const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
+
+  positionsChunkParam =
+    mergedGeometry.attributes.position.array.length / amount;
+
+  const material = new THREE.MeshPhongMaterial({
+    color: 0xffff00,
+  });
+
+  mesh = new THREE.Mesh(mergedGeometry, material);
+
+  world.scene.add(mesh);
+
+  const light = new THREE.AmbientLight(0xffffff);
+  world.scene.add(light);
+
+  world.beforeRenderFunctions.push(updateGeometry);
+};
+
 const init = () => {
-  const world = new World({
+  world = new World({
     stageDom: document.getElementById("three-stage"),
   });
+
+  setupThreeContents();
+
   world.update();
 };
 
