@@ -5,6 +5,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 let world, mesh, positionsChunkParam;
 const amount = 3000;
+const boxSpeeds = [];
 
 class World {
   constructor({ stageDom }) {
@@ -39,20 +40,14 @@ class World {
       logarithmicDepthBuffer: true,
     });
     this.renderer.setClearColor(new THREE.Color(0x000000));
-    this.renderer.setSize(
-      this.stageDom.clientWidth,
-      this.stageDom.clientHeight
-    );
+    this.renderer.setSize(this.stageDom.clientWidth, this.stageDom.clientHeight);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
     this.stageDom.appendChild(this.renderer.domElement);
 
     document.body.appendChild(this.stats.dom);
 
-    this.orbitControls = new OrbitControls(
-      this.camera,
-      this.renderer.domElement
-    );
+    this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
   }
 
   update() {
@@ -98,10 +93,9 @@ const updateGeometry = () => {
   const positionAttributes = mesh.geometry.attributes.position;
 
   for (let i = 0; i < amount; i++) {
-    const moveParam = Math.random() * 0.1;
     const initJ = i * positionsChunkParam;
     for (let j = initJ; j < initJ + positionsChunkParam; j += 3) {
-      positionAttributes.array[j + 2] -= moveParam;
+      positionAttributes.array[j + 2] -= boxSpeeds[i];
     }
   }
 
@@ -119,12 +113,12 @@ const setupThreeContents = () => {
     geometry.translate(initPos.x, initPos.y, initPos.z);
 
     geometries.push(geometry);
+    boxSpeeds.push(Math.random() * 0.01);
   }
 
   const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
 
-  positionsChunkParam =
-    mergedGeometry.attributes.position.array.length / amount;
+  positionsChunkParam = mergedGeometry.attributes.position.array.length / amount;
 
   const material = new THREE.MeshPhongMaterial({
     color: 0xffff00,
@@ -134,7 +128,8 @@ const setupThreeContents = () => {
 
   world.scene.add(mesh);
 
-  const light = new THREE.AmbientLight(0xffffff);
+  const light = new THREE.PointLight(0xffffff, 100, 1000);
+  light.position.set(3, 5, -10);
   world.scene.add(light);
 
   world.beforeRenderFunctions.push(updateGeometry);
