@@ -1,3 +1,1 @@
 ## threejs-geometry-merge-experiment
-
-
